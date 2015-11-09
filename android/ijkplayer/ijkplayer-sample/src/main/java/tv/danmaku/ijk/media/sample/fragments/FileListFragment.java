@@ -72,9 +72,7 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
         ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.fragment_file_list, container, false);
         mPathView = (TextView) viewGroup.findViewById(R.id.path_view);
         mFileListView = (ListView) viewGroup.findViewById(R.id.file_list_view);
-
         mPathView.setVisibility(View.VISIBLE);
-
         return viewGroup;
     }
 
@@ -144,7 +142,7 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
             Fragment newFragment = FileListFragment.newInstance(path);
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
             transaction.add(R.id.body, newFragment);
-            transaction.addToBackStack(null);
+            transaction.addToBackStack(TAG);
             transaction.commit();
         } else if (f.exists()) {
 //            VideoActivity.intentTo(this, f.getPath(), f.getName());

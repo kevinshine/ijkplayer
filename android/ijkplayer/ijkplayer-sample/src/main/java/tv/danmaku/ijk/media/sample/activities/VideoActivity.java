@@ -32,9 +32,11 @@ import android.view.MenuItem;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
+import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.sample.R;
 import tv.danmaku.ijk.media.sample.application.Settings;
+import tv.danmaku.ijk.media.sample.content.MediaBean;
 import tv.danmaku.ijk.media.sample.content.RecentMediaStorage;
 import tv.danmaku.ijk.media.sample.widget.media.AndroidMediaController;
 import tv.danmaku.ijk.media.sample.widget.media.IjkVideoView;
@@ -77,6 +79,8 @@ public class VideoActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         String intentAction = intent.getAction();
+        Log.d(TAG,"intentAction:" + intentAction);
+
         if (!TextUtils.isEmpty(intentAction)) {
             if (intentAction.equals(Intent.ACTION_VIEW)) {
                 mVideoPath = intent.getDataString();
@@ -192,5 +196,23 @@ public class VideoActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private IMediaPlayer.OnCompletionListener completionListener = new IMediaPlayer.OnCompletionListener() {
+        @Override
+        public void onCompletion(IMediaPlayer mp) {
+
+        }
+    };
+
+    public void playMediaFile(MediaBean mediaBean){
+        if (mVideoView == null)
+            return;
+
+        if (mVideoView.isPlaying()){
+            mVideoView.stopMediaPlayer();
+            mVideoView.setVideoPath(mediaBean.path);
+            mVideoView.start();
+        }
     }
 }

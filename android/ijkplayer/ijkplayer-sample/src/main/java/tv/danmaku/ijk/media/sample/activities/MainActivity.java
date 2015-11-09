@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tv.danmaku.ijk.media.sample.R;
+import tv.danmaku.ijk.media.sample.application.PlaylistManager;
 import tv.danmaku.ijk.media.sample.content.MediaBean;
 import tv.danmaku.ijk.media.sample.fragments.FileListFragment;
 import tv.danmaku.ijk.media.sample.fragments.PlaylistFragment;
@@ -35,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     private static final String SP_PLAYLIST = "sp_playlist";
-    public static List<MediaBean> PLAYLIST_ITEMS = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        PlaylistManager playlistManager = PlaylistManager.getInstance();
+
         SharedPreferences sp = getPreferences(MODE_PRIVATE);
         String playlistJson = sp.getString(SP_PLAYLIST, null);
         if (playlistJson != null) {
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                     MediaBean bean = new MediaBean();
                     bean.fileName = object.getString(MediaBean.KEY_FILE_NAME);
                     bean.path = object.getString(MediaBean.KEY_PATH);
-                    PLAYLIST_ITEMS.add(bean);
+                    playlistManager.addItem(bean);
                 }
             } catch (JSONException e) {
                 Log.e(TAG, "parse json error");
@@ -93,6 +95,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        cleanFragments();
+
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             SettingsActivity.intentTo(this);
@@ -100,39 +104,55 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_playlist) {
             Fragment newFragment = PlaylistFragment.newInstance();
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.body, newFragment).commit();
+            transaction.replace(R.id.body, newFragment,PlaylistFragment.TAG).commit();
         } else if (id == R.id.action_explorer) {
             String initPath = "/sdcard";
             Fragment newFragment = FileListFragment.newInstance(initPath);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.body, newFragment).commit();
+            transaction.replace(R.id.body, newFragment, FileListFragment.TAG).commit();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void cleanFragments(){
+        FragmentManager manager = getSupportFragmentManager();
+        int count = manager.getBackStackEntryCount();
+        for (int i = 0; i < count; i++) {
+            manager.popBackStack();
+        }
+    }
+
     private void loadPlaylistFragment() {
         Fragment newFragment = PlaylistFragment.newInstance();
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.body, newFragment).commit();
+        transaction.replace(R.id.body, newFragment, PlaylistFragment.TAG).commit();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        PlaylistManager playlistManager = PlaylistManager.getInstance();
         JSONArray array = new JSONArray();
         try {
-            for (MediaBean bean : PLAYLIST_ITEMS) {
-                JSONObject object = new JSONObject();
-                object.put(MediaBean.KEY_FILE_NAME, bean.fileName);
-                object.put(MediaBean.KEY_PATH, bean.path);
-                array.put(object);
+            List<MediaBean> list = playlistManager.getPlaylist();
+            synchronized (list){
+                for (MediaBean bean : list) {
+                    JSONObject object = new JSONObject();
+                    object.put(MediaBean.KEY_FILE_NAME, bean.fileName);
+                    object.put(MediaBean.KEY_PATH, bean.path);
+                    array.put(object);
+                }
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         // save to SharedPreferences
         SharedPreferences sp = getPreferences(MODE_PRIVATE);
-        sp.edit().putString(SP_PLAYLIST, array.toString());
+        sp.edit().putString(SP_PLAYLIST, array.toString()).apply();
+
+        playlistManager.clear();
     }
 }

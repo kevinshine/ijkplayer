@@ -260,8 +260,15 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         invalidate();
     }
 
-    // REMOVED: addSubtitleSource
-    // REMOVED: mPendingSubtitleTracks
+    public void stopMediaPlayer(){
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
+            mCurrentState = STATE_PLAYBACK_COMPLETED;
+
+            AudioManager am = (AudioManager) mAppContext.getSystemService(Context.AUDIO_SERVICE);
+            am.abandonAudioFocus(null);
+        }
+    }
 
     public void stopPlayback() {
         if (mMediaPlayer != null) {
@@ -291,7 +298,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
         am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
         try {
-            mMediaPlayer = createPlayer(mSettings.getPlayer());
+//            mMediaPlayer = createPlayer(mSettings.getPlayer());
+            mMediaPlayer = createPlayer();
 
             // TODO: create SubtitleController in MediaPlayer, but we need
             // a context for the subtitle renderers
@@ -961,6 +969,46 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
                 break;
         }
         return text;
+    }
+
+    public IMediaPlayer createPlayer() {
+        IjkMediaPlayer ijkMediaPlayer = null;
+        if (mUri != null) {
+            ijkMediaPlayer = new IjkMediaPlayer();
+            ijkMediaPlayer.native_setLogLevel(IjkMediaPlayer.IJK_LOG_DEBUG);
+
+            if (mSettings.getUsingMediaCodec()) {
+                ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", 1);
+                if (mSettings.getUsingMediaCodecAutoRotate()) {
+                    ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", 1);
+                } else {
+                    ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-auto-rotate", 0);
+                }
+            } else {
+                ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec", 0);
+            }
+
+            if (mSettings.getUsingOpenSLES()) {
+                ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "opensles", 1);
+            } else {
+                ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "opensles", 0);
+            }
+
+            String pixelFormat = mSettings.getPixelFormat();
+            if (TextUtils.isEmpty(pixelFormat)) {
+                ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "overlay-format", IjkMediaPlayer.SDL_FCC_RV32);
+            } else {
+                ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "overlay-format", pixelFormat);
+            }
+            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1);
+            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0);
+
+            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "http-detect-range-support", 0);
+
+            ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_CODEC, "skip_loop_filter", 48);
+        }
+
+        return ijkMediaPlayer;
     }
 
     public IMediaPlayer createPlayer(int playerType) {
