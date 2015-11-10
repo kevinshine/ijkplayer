@@ -41,6 +41,7 @@ import java.io.IOException;
 import tv.danmaku.ijk.media.sample.R;
 import tv.danmaku.ijk.media.sample.activities.MainActivity;
 import tv.danmaku.ijk.media.sample.activities.VideoActivity;
+import tv.danmaku.ijk.media.sample.application.PlaylistManager;
 import tv.danmaku.ijk.media.sample.content.MediaBean;
 import tv.danmaku.ijk.media.sample.content.PathCursor;
 import tv.danmaku.ijk.media.sample.content.PathCursorLoader;
@@ -149,7 +150,7 @@ public class FileListFragment extends Fragment implements LoaderManager.LoaderCa
             MediaBean bean = new MediaBean();
             bean.path = f.getPath();
             bean.fileName = f.getName();
-            MainActivity.PLAYLIST_ITEMS.add(bean);
+            PlaylistManager.getInstance().addItem(bean);
         }
     }
 

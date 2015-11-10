@@ -15,6 +15,7 @@ import android.widget.ListView;
 import tv.danmaku.ijk.media.sample.R;
 import tv.danmaku.ijk.media.sample.activities.MainActivity;
 import tv.danmaku.ijk.media.sample.activities.VideoActivity;
+import tv.danmaku.ijk.media.sample.application.PlaylistManager;
 import tv.danmaku.ijk.media.sample.content.MediaBean;
 
 /**
@@ -41,9 +42,8 @@ public class PlaylistFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         mAdapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, MainActivity.PLAYLIST_ITEMS);
+                android.R.layout.simple_list_item_1, android.R.id.text1, PlaylistManager.getInstance().getPlaylist());
     }
 
     @Override
@@ -55,7 +55,7 @@ public class PlaylistFragment extends Fragment {
         removeAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.PLAYLIST_ITEMS.clear();
+                PlaylistManager.getInstance().clear();
                 mAdapter.clear();
                 mAdapter.notifyDataSetChanged();
             }
@@ -66,8 +66,8 @@ public class PlaylistFragment extends Fragment {
         playlist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                MediaBean bean = MainActivity.PLAYLIST_ITEMS.get(position);
-                VideoActivity.intentTo(getActivity(),bean.path,bean.fileName);
+                MediaBean bean = PlaylistManager.getInstance().getPlaylist().get(position);
+                VideoActivity.intentTo(getActivity(),bean.path,bean.fileName,position);
             }
         });
         return view;

@@ -14,30 +14,69 @@ public class PlaylistManager {
     private List<MediaBean> mList = Collections.synchronizedList(new ArrayList<MediaBean>());
     private static PlaylistManager INSTANCE = null;
 
-    private PlaylistManager(){
+    private MediaBean mPlayingItem = null;
+
+    private PlaylistManager() {
     }
 
-    public static PlaylistManager getInstance(){
-        if (INSTANCE == null){
+    public static PlaylistManager getInstance() {
+        if (INSTANCE == null) {
             INSTANCE = new PlaylistManager();
         }
 
         return INSTANCE;
     }
 
-    public void addAll(List<MediaBean> list){
+    public void addAll(List<MediaBean> list) {
         mList.addAll(list);
     }
 
-    public void addItem(MediaBean bean){
+    public void addItem(MediaBean bean) {
         mList.add(bean);
     }
 
-    public void clear(){
+    public void clear() {
         mList.clear();
     }
 
-    public List<MediaBean> getPlaylist(){
+    public List<MediaBean> getPlaylist() {
         return mList;
+    }
+
+    public MediaBean getItem(int position){
+        MediaBean result = null;
+
+        if (position > -1 && position < mList.size())
+            result = mList.get(position);
+
+        return result;
+    }
+
+    public void setPlayingItem(MediaBean bean){
+        this.mPlayingItem = bean;
+    }
+
+    public MediaBean getPlayingItem(){
+        return mPlayingItem;
+    }
+
+    public MediaBean next(MediaBean bean) {
+        MediaBean result = null;
+        int index = mList.indexOf(bean);
+        if (index > -1 && index < mList.size()-1) {
+            result = mList.get(index + 1);
+        }
+
+        return result;
+    }
+
+    public MediaBean previous(MediaBean bean){
+        MediaBean result = null;
+        int index = mList.indexOf(bean);
+        if (index > 0 && index < mList.size()) {
+            result = mList.get(index - 1);
+        }
+
+        return result;
     }
 }

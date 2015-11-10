@@ -35,6 +35,7 @@ import android.widget.TextView;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.sample.R;
+import tv.danmaku.ijk.media.sample.application.PlaylistManager;
 import tv.danmaku.ijk.media.sample.application.Settings;
 import tv.danmaku.ijk.media.sample.content.MediaBean;
 import tv.danmaku.ijk.media.sample.content.RecentMediaStorage;
@@ -45,6 +46,7 @@ import tv.danmaku.ijk.media.sample.widget.media.MeasureHelper;
 public class VideoActivity extends AppCompatActivity {
     private static final String TAG = "VideoActivity";
 
+    private static final String MEDIA_INDEX = "media_index";
     private String mVideoPath;
     private Uri    mVideoUri;
 
@@ -55,16 +57,18 @@ public class VideoActivity extends AppCompatActivity {
 
     private Settings mSettings;
     private boolean mBackPressed;
+    private MediaBean mCurrentItem;
 
-    public static Intent newIntent(Context context, String videoPath, String videoTitle) {
+    public static Intent newIntent(Context context, String videoPath, String videoTitle,int mediaIndex) {
         Intent intent = new Intent(context, VideoActivity.class);
         intent.putExtra("videoPath", videoPath);
         intent.putExtra("videoTitle", videoTitle);
+        intent.putExtra(MEDIA_INDEX, mediaIndex);
         return intent;
     }
 
-    public static void intentTo(Context context, String videoPath, String videoTitle) {
-        context.startActivity(newIntent(context, videoPath, videoTitle));
+    public static void intentTo(Context context, String videoPath, String videoTitle,int mediaIndex) {
+        context.startActivity(newIntent(context, videoPath, videoTitle,mediaIndex));
     }
 
     @Override
@@ -140,6 +144,15 @@ public class VideoActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        int index = intent.getIntExtra(MEDIA_INDEX,-1);
+        if (index > -1){
+            mCurrentItem = PlaylistManager.getInstance().getItem(index);
+            PlaylistManager.getInstance().setPlayingItem(mCurrentItem);
+        }
+
+        // set on complete callback
+        mVideoView.setOnCompletionListener(completionListener);
         mVideoView.start();
     }
 
@@ -201,18 +214,24 @@ public class VideoActivity extends AppCompatActivity {
     private IMediaPlayer.OnCompletionListener completionListener = new IMediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(IMediaPlayer mp) {
+            PlaylistManager manager = PlaylistManager.getInstance();
+            MediaBean current = manager.getPlayingItem();
+            MediaBean nextItem = manager.next(current);
 
+            playMediaFile(nextItem);
         }
     };
 
     public void playMediaFile(MediaBean mediaBean){
-        if (mVideoView == null)
+        if (mVideoView == null || mediaBean == null)
             return;
 
         if (mVideoView.isPlaying()){
             mVideoView.stopMediaPlayer();
-            mVideoView.setVideoPath(mediaBean.path);
-            mVideoView.start();
         }
+
+        mVideoView.setVideoPath(mediaBean.path);
+        mVideoView.start();
+        PlaylistManager.getInstance().setPlayingItem(mediaBean);
     }
 }
